@@ -8,7 +8,8 @@ from functools import partial
 from sklearn import feature_extraction
 
 
-steam_df = steam_data.load_steam_df()
+steam_df_url = 'https://storage.googleapis.com/lambdastruck_bucket/datasets/steam/steam_games.csv.gz' 
+steam_df = steam_data.load_steam_df(steam_df_url)
 vectors_url = 'https://storage.googleapis.com/lambdastruck_bucket/datasets/steam/steam_metadata_reduced_vectors.csv.gz' 
 steam_metadata_vectors = pd.read_csv(vectors_url).values
 
