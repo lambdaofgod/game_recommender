@@ -1,1 +1,5 @@
-git+https://github.com/jakeret/unet/tree/master/notebooks
+nbdev
+scikit-learn
+pandas
+streamlit
+kaggle

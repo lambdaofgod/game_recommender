@@ -25,6 +25,7 @@ game = st.text_input('Input game name')
 if st.checkbox('Find similar games'):
     st.text('Games matching title')
     chosen_games_df = steam_data.get_games_by_name(steam_df, game)
+    st.write(chosen_games_df)
     st.text('Similar games')
     similar_games_df = steam_data.similar_games(chosen_games_df, steam_df, steam_metadata_vectors)
     st.write(similar_games_df)
