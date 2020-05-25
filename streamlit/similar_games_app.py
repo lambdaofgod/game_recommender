@@ -1,9 +1,7 @@
 import streamlit as st
-# To make things easier later, we're also importing numpy and pandas for
-# working with sample data.
 import numpy as np
 import pandas as pd
-from game_recommender import steam_data
+from game_recommender import steam_data, content_based
 from functools import partial
 from sklearn import feature_extraction
 
@@ -17,7 +15,7 @@ steam_metadata_vectors = pd.read_csv(vectors_url).values
 def show_similar_games(game_name_substring):
     chosen_games_df = steam_data.get_games_by_name(steam_df, game_name_substring)
     if len(chosen_games_df) > 0:
-        similar_games_df = steam_data.similar_games(chosen_games_df, steam_df, steam_metadata_vectors)
+        similar_games_df = content_based.similar_games(chosen_games_df, steam_df, steam_metadata_vectors)
         chosen_games_df.index = chosen_games_df['name']
         st.text('Games matching title')
         st.write(chosen_games_df)
