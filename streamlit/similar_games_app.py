@@ -16,7 +16,7 @@ searcher = content_based.MetadataSimilaritySearcher(steam_df, steam_metadata_vec
 def show_similar_games(game_name_substring):
     chosen_games_df = steam_data.get_games_by_name(steam_df, game_name_substring)
     if len(chosen_games_df) > 0:
-        results = searcher.find_similar(chosen_games_df)
+        results = searcher.find_similar(chosen_games_df['name'])
         similar_games_df = content_based.make_stacked_results_df(*results)
         chosen_games_df.index = chosen_games_df['name']
         st.text('Games matching title')

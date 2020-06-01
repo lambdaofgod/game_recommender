@@ -3,3 +3,6 @@ scikit-learn
 pandas
 streamlit
 kaggle
+tqdm
+seaborn
+attr
