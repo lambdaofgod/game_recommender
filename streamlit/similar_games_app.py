@@ -26,5 +26,5 @@ def show_similar_games(game_name_substring):
     else:
         st.text('Nothing found for query: "{}"'.format(game_name_substring))
     
-game = st.text_input('Input game name', value='S.T.A.L.K.E.R')
+game = st.text_input('Input game name', value='s.t.a.l.k.e.r')
 show_similar_games(game)
