@@ -28,7 +28,7 @@ def show_similar_games(raw_game_name_substring):
         st.write(chosen_games_df)
         st.text('Similar games')
         st.write(similar_games_df)
-        viz_df['is_similar'] = viz_df['name'].isin(results[0])
+        viz_df['is_similar'] = viz_df['name'].isin(content_based.get_similar_game_names_from_results(results[0]))
         similar_points_altair_scatterplot = (
             altair.Chart(viz_df[viz_df['is_similar']])
                 .mark_circle(size=100, color='red', opacity=1.0)
@@ -42,7 +42,6 @@ def show_similar_games(raw_game_name_substring):
                 .encode(x='X', y='Y', tooltip=['name'])
                 .interactive()
         )
-
 
         st.altair_chart(similar_points_altair_scatterplot + not_similar_points_altair_scatterplot)
     else:
