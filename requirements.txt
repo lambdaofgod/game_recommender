@@ -6,3 +6,7 @@ kaggle
 tqdm
 seaborn
 attr
+pydot
+graphviz
+altair
+umap-learn
