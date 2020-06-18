@@ -1,4 +1,6 @@
-# nbdev template
+# game_recommender 
 
-Use this template to more easily create your nbdev project.
+Using evolutionary algorithms for multiobjective recommender system 
+
+![](assets/final_nsgaii.png)
 
