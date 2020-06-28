@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{blindtext}
+\usepackage{float}
+
+\usepackage{graphicx} 
+\usepackage{caption,subcaption}
+\usepackage{hyperref}
+
+\newcommand{\optimfig}[3]{
+    \begin{figure}[H]
+    \subsection{#3}
+        \centering % <-- added
+    \begin{subfigure}{0.5\textwidth}
+    \includegraphics[width=\linewidth]{#1}
+    \caption{Objectives - F(w)}
+    \label{fig:1}
+    \end{subfigure}\hfil % <-- added
+    \begin{subfigure}{0.5\textwidth}
+    \includegraphics[width=\linewidth]{#2}
+    \caption{Weights - w}
+    \label{fig:2}
+    \end{subfigure}\hfil % <-- added
+    \end{figure}
+}
+
+
+\title{
+  Game Recommendation using Multiobjective Evolutionary Optimization \\
+  \large Project for Evolutionary Algorithms course
+}
+\author{Jakub Bartczuk}
+\date{June 2020}
+
+\begin{document}
+\maketitle
+\section{Introduction}
+
+To use machine learning methods for recommender systems the evaluation of recommendation procedure needs to be defined as optimization problem that captures this procedure's essential properties.
+
+There exist various metrics commonly used for capturing these properties, but every such method has its drawbacks.
+
+Because recommendation evaluation metrics can have inconsistent aims, this problem can be naturally formulated as multiobjective optimization. For such problems population-based methods like some evolutionary algorithms can be used to not only find \textit{a} solution, but to find diverse set of nondominated solutions. 
+
+The following problem tackes problem of recommending Steam games. For evaluation two metrics are used, and three methods for recommendation are combined to jointly optimize these metrics.
+
+\section{Datasets}
+
+Two datasets were chosen for building recommenders:
+
+\begin{itemize}
+\item first dataset contains information about Steam game purchases and amount of time each users spent playing their games.
+\item second dataset has game metadata: genre, tag and description data is used for building recommendations.
+\end{itemize}
+
+Metadata information on genres, tags and descriptions were used to build features for games: these columns are essentially text columns, so TF-IDF was used to build vectors. 
+
+\section{Recommenders}
+
+Two classical approaches to recommendations use item-item similarity and user-user similarity. These approaches are complementary - user-based system can be thought of a baseline, but it fails for users that didn't rate many items. On the other hand item-based recommender can work with minimal data (and alleviate the so-called cold start problem), but it will lack novelty.
+
+User-user recommender considers sequences of items that were rated by similar users, and combines them using user similarity.
+
+Item-item recommender for a given set of items and their ratings provides items that are most similar to rated items, with scores weighted by the similarity.
+
+The project also uses a simpler version of item-item recommender, where an average of features of rated items is calculated, and items similar to these average are returned.
+
+\section{Evaluation metrics}
+
+We will use two ranking metrics to evaluate the recommender.
+
+\subsection{recall@k}
+It is  essentially false negative rate for top $k$ items. For a sequence $I$ of ratings and $\hat{I}$ of predicted items 
+
+$recall@k(I, \hat{I}) = \frac{1}{min(k, |I|)}|I \cap \hat{I}| $
+
+\subsection{Kendall's $\tau$}
+The second metric is used to measure how similar are orderings of $I$ and $\hat{I}$.
+
+For a pair of zipped of items from $I, I'$
+
+$((i_k, i'_k)$ $(i_j, i'_j))$ is said to be \textit{concordant} if their signs are not zero and coincide: $sign(i_k -  i_j) = sign(i'_k - i'_j)$. It is said to be \textit{disconcordant} if the signs are not equal.
+
+Kendall rank correlation coefficient for two rankings with $n_c$ concordant pairs and $n_d$ disconcordant pairs is defined as
+
+$\tau = \frac{n_c - n_d}{C^n_2}$
+
+Where $C^n_2$ is the number of pairs from $n$-element set.
+
+\subsection{Tradeoffs}
+
+Since recall measures false negative rate, increasing number of recommended items will never decrease it. On the other hand adding recommendations changes ranking, so by adding noisy entries it might decrease $\tau$.
+
+\section{Problem definition}
+
+We have three recommenders $R_u, R_c, R_m$, user, item-based and mean item-based respectively.
+
+For each user's item list $I$ each recommender outputs predicted item list $R(I)$.
+
+The recommenders are combined with weighted average - for parameter vector $$w = (w_u, w_c, w_m)$$
+
+We have predicted ratings
+
+$$\hat{I} = w_u R_u(I) + w_c R_c(I) + w_m R_m(I)$$
+
+Thus the optimized function is $$F: \mathbb R^3_+ \to \mathbb R^2$$
+
+$$F(w) = [recall@10(\hat{I}), \tau(\hat{I})]$$
+
+More precisely domain of $F$ is 3d simplex, $S = \{w \in \mathbb{R}^3: \sum w_i = 1, w_i \geq 0\}$
+
+\section{Optimization Algorithms}
+
+The following optimization algorithms were used:
+
+
+\begin{itemize}
+\item NSGAII
+\item UNSGAIII
+\item MOEA/D
+\end{itemize}
+
+The first algorithm was implemented by author \footnote{\href{https://github.com/lambdaofgod/mlutil/blob/master/mlutil/evolutionary_algorithms/multiobjective.py}{multiobjective.py}}, and for two other implementations from \textit{pymoo}\footnote{\href{https://www.pymoo.org/}{pymoo.org}} library were used.
+
+\subsection{NSGAII}
+
+NSGAII with basic mutation and no crossover. This is the simplest method so we use population of size 1000.
+\subsection{UNSGAIII}
+
+\href{https://www.egr.msu.edu/~kdeb/papers/k2012009.pdf}{An Evolutionary Many-Objective Optimization Algorithm Using Reference-point Based Non-dominated Sorting Approach}
+
+Algorithm that is an improved version of NSGA.
+
+Key differences with NSGAII:
+
+\begin{itemize}
+\item using \textit{reference directions} (NSGA-III)
+\item using tournament method for parent selection
+\end{itemize}
+
+Reference directions were introduced to sidestep the problem with multidimensional optimization: in high dimensions Pareto front size grows exponentially, and standard methods from NSGAII might become less meaningful, computationally more expensive and harder to visualize/evaluate.
+
+To address this, a set of diverse points is chosen at start, and optimization for subpopulations proceeds to make it closer to these \textit{reference points}.
+
+\subsection{MOEA/D}
+\textit{MOEA/D: A Multiobjective Evolutionary Algorithm Based on Decomposition}
+
+MOEA/D is a multiobjective optimization algorithm that uses \textbf{decomposition} into scalar subproblems.
+
+The scalar subproblems are chosen so that optimizing them separately yields good approximation of Pareto Frontier, at least when subpopulations that optimize them are not too similar.
+
+\subsubsection{Decomposition}
+
+MOEA/D redefines optimization problem as separate single ojective optimization problems: for given $\lambda$ it weights objectives of $f(x)$ .
+
+An example of such approach is scalarization: $g(x) = \lambda^T f(x)$
+
+Chosen weight vectors $\Lambda = (\lambda^i)_{i < k}$ represent tradeoffs between optimizing different objectives (with respect to a given reference point).
+
+For each of these $\lambda$ we have a single objective function - this problem can be solved using classical Evolutionary Algorithms.
+
+The usefulness of this approach is that $g$s are similar for similar $\lambda$s, so we can reuse knowledge obtained optimizing using close $\lambda$s. 
+
+\subsubsection{Decomposition using Chebyshev approach}
+
+Original MOEAD uses so-called Chebyshev approach: for $m$ objectives, vector of subproblem weights $\lambda$ and a reference point $z \in R^m$ we define 
+
+$g^{Ch}(x | \lambda, z) = \|\lambda_i^T (f(x) - z)\|_{\infty} = max_{i < m} \lambda_i |f_i(x) - z_i|$
+
+
+\section{Results}
+
+We see that all three methods have found varied sets of solutions that illustrate tradeoffs between metrics. The first method illustrates the whole population and contrasts set of solutions selected with NSGAIII, and other methods show only small number of nondominated solutions.
+
+
+\optimfig{nsgaii.png}{nsgaii_simplex.png}{NSGAII}
+  
+\optimfig{unsgaii.png}{unsgaiii_simplex.png}{UNSGAIII}
+\optimfig{moead.png}{moead_simplex.png}{MOEA/D}
+
+\clearpage{}
+\section{Comments, future steps}
+
+The code and notebooks with further details can be found on github \footnote{\href{https://github.com/lambdaofgod/game{\_}recommender}{https://github.com/lambdaofgod/game{\_}recommender}}
+
+The next step will be to implement online evaluation - provide users possibility to manually add games and their respective ranks.
+
+From the machine learning perspective, it will be interesting to add more advanced methods for recommendation. For now only kNN methods were used, because they allow to easily add and evaluate new users; typically ML methods for recommenders like Matrix Factorization and Factorization Machines assume fixed user-item matrix, which means that user's ID is a feature.
+
+Another interesting direction will be to consider another metric for recommendation diversity; the author considered adding this, but measuring diversity is complex topic and itself. Adding diversity would mean additional choices on how to calculate it.
+\end{document}
